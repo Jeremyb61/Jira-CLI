@@ -63,7 +63,18 @@ def list_issue_types():
     except requests.exceptions.HTTPError as e:
         print(f"Failed to fetch issue types: {e} - {response.text}")
 
-
+def list_transitions(issue_key):
+    url = f"{JIRA_DOMAIN}/rest/api/3/issue/{issue_key}/transitions"
+    try:
+        response = requests.get(url, headers=headers, auth=auth)
+        response.raise_for_status()
+        data = response.json()
+        transitions = data.get("transitions", [])
+        print(f"Available transitions for {issue_key}:")
+        for t in transitions:
+            print(f"- {t['name']} (ID: {t['id']})")
+    except requests.exceptions.HTTPError as e:
+        print(f"Failed to fetch transitions: {e} - {response.text}")
 
 def create_issue(issue_type, summary, description):
     url = f"{JIRA_DOMAIN}/rest/api/3/issue"
@@ -119,4 +130,34 @@ def update_issue(issue_key, new_summary):
         print(f"Issue {issue_key} updated successfully.")
     except requests.exceptions.HTTPError as e:
         print(f"Failed to update issue: {e} - {response.text}")
+
+
+def escalate_issue(issue_key):
+    url = f"{JIRA_DOMAIN}/rest/api/3/issue/{issue_key}/transitions"
+
+    # First get available transitions
+    try:
+        response = requests.get(url, headers=headers, auth=auth)
+        response.raise_for_status()
+        data = response.json()
+        transitions = data.get("transitions", [])
+
+        escalate_transition = None
+        for t in transitions:
+            if t['name'].lower() == "escalate":  # <--------------------------====--===--===---==-=
+                escalate_transition = t['id']
+                break
+
+        if not escalate_transition:
+            print(f"No 'Escalated' transition available for {issue_key}. Run 'transitions {issue_key}' to see options.")
+            return
+
+        # Perform the transition
+        payload = {"transition": {"id": escalate_transition}}
+        post_response = requests.post(url, headers=headers, auth=auth, json=payload)
+        post_response.raise_for_status()
+        print(f"Issue {issue_key} successfully escalated.")
+
+    except requests.exceptions.HTTPError as e:
+        print(f"Failed to escalate issue: {e} - {response.text}")
 

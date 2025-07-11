@@ -1,5 +1,5 @@
 import shlex
-from jira_api import get_issue, create_issue, update_issue, list_issue_types, list_issues
+from jira_api import get_issue, create_issue, update_issue, list_issue_types, list_issues, escalate_issue, list_transitions
 
 def main():
     print("Welcome to the Jira CLI shell. Type 'help' for commands, 'exit' to quit.")
@@ -13,11 +13,14 @@ def main():
                 break
             if command.lower() == "help":
                 print("Commands:")
-                print("  List all issue: list")
-                print("  To view one issue: get <ISSUE-KEY>")
-                print("  Create a new issue: create <SUMMARY> <DESCRIPTION> <ISSUE-TYPE>")
-                print("  Update an issue: update <ISSUE-KEY> <NEW-SUMMARY>")
-                print("  List issue types: types")
+                print("  list - Lists all issue")
+                print("  get <ISSUE-KEY> - To view one issue")
+                print("  create <SUMMARY> <DESCRIPTION> <ISSUE-TYPE> - Create a new issue")
+                print("  update <ISSUE-KEY> <NEW-SUMMARY> - Update an issue")
+                print("  types - List issue types")
+                print("  transitions <ISSUE-KEY> - To list availabe transitions for an issue")
+                print("  escalate <ISSUE-KEY> - To escalate an issue")
+
                 print("  exit")
                 continue
 
@@ -35,6 +38,11 @@ def main():
                 list_issue_types()
             elif cmd == "list":
                 list_issues()
+            elif cmd == "transitions" and len(args) >= 2:
+                list_transitions(args[1])
+            elif cmd == "escalate" and len(args) >= 2:
+                escalate_issue(args[1])
+
 
             else:
                 print("Invalid command or arguments. Type 'help'.")
