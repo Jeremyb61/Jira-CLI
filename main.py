@@ -1,49 +1,49 @@
-# main.py
-
-import argparse
+import shlex
 from jira_api import get_issue, create_issue, update_issue, list_issue_types, list_issues
 
-parser = argparse.ArgumentParser(description="Jira CLI Tool")
-subparsers = parser.add_subparsers(dest="command")
+def main():
+    print("Welcome to the Jira CLI shell. Type 'help' for commands, 'exit' to quit.")
 
-# GET issue
-get_parser = subparsers.add_parser("get", help="Get a Jira issue")
-get_parser.add_argument("issue_key", help="Jira issue key (e.g. ITSD-1)")
+    while True:
+        try:
+            command = input("jiracli> ").strip()
+            if not command:
+                continue
+            if command.lower() in ["exit", "quit"]:
+                break
+            if command.lower() == "help":
+                print("Commands:")
+                print("  List all issue: list")
+                print("  To view one issue: get <ISSUE-KEY>")
+                print("  Create a new issue: create <SUMMARY> <DESCRIPTION> <ISSUE-TYPE>")
+                print("  Update an issue: update <ISSUE-KEY> <NEW-SUMMARY>")
+                print("  List issue types: types")
+                print("  exit")
+                continue
 
-# Get issue type
-list_types_parser = subparsers.add_parser("types", help="List issue types for this project")
+            # Parse input like a shell command
+            args = shlex.split(command)
+            cmd = args[0]
 
+            if cmd == "get" and len(args) >= 2:
+                get_issue(args[1])
+            elif cmd == "create" and len(args) >= 4:
+                create_issue(args[1], args[2], args[3])
+            elif cmd == "update" and len(args) >= 3:
+                update_issue(args[1], args[2])
+            elif cmd == "types":
+                list_issue_types()
+            elif cmd == "list":
+                list_issues()
 
-# CREATE issue
-create_parser = subparsers.add_parser("create", help="Create a new Jira issue")
-create_parser.add_argument("issue_type", help="Type of issue to create (e.g. Task, Bug, Incident, Service Request)")
-create_parser.add_argument("summary", help="Summary of the issue")
-create_parser.add_argument("description", help="Description of the issue")
+            else:
+                print("Invalid command or arguments. Type 'help'.")
 
+        except KeyboardInterrupt:
+            print("\nExiting.")
+            break
+        except Exception as e:
+            print(f"Error: {e}")
 
-# UPDATE issue
-update_parser = subparsers.add_parser("update", help="Update an existing Jira issue")
-update_parser.add_argument("issue_key", help="Jira issue key")
-update_parser.add_argument("new_summary", help="New summary to set")
-
-# Add new subcommand
-list_parser = subparsers.add_parser("list", help="List issues in the project")
-
-
-
-
-args = parser.parse_args()
-
-if args.command == "get":
-    get_issue(args.issue_key)
-elif args.command == "create":
-    create_issue(args.issue_type, args.summary, args.description)
-elif args.command == "update":
-    update_issue(args.issue_key, args.new_summary)
-elif args.command == "list":
-    list_issues()
-elif args.command == "types":
-    list_issue_types()
-
-else:
-    parser.print_help()
+if __name__ == "__main__":
+    main()
